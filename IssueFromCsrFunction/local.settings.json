@@ -1,0 +1,13 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "REPLACE_WITH_YOUR_STORAGE_CONNECTION_STRING",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+        "KeyVaultUri": "https://kv-cert-auto-siva.vault.azure.net/",
+        "AcmeEmail": "sivaraam73@yahoo.com",
+        "AllowedDomains": "no-face.co,no-face.video",
+        "AzureSubscriptionId": "3ff5db21-67df-4c25-813b-0dcc8ae9d150",
+        "DnsResourceGroup": "rg-cert-automation",
+        "AcmeStaging": "true"
+    }
+}
