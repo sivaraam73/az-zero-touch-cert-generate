@@ -16,7 +16,7 @@ permissions:
 
 env:
   ALLOWED_DOMAINS: "no-face.co,no-face.video"
-  FUNCTION_URL: "https://func-acmetest.azurewebsites.net/api/issue-from-csr"
+  FUNCTION_URL: "https://func-cert-auto-siva.azurewebsites.net/api/issue-from-csr"
 
 jobs:
   validate:
