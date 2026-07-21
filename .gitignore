@@ -2,3 +2,6 @@ IssueFromCsrFunction/test.csr
 IssueFromCsrFunction/test.key
 e2e-test.key
 info-video-test.key
+*.cer
+*.crt
+*.p7b

@@ -36,4 +36,23 @@ public class KeyVaultAccountStore
         var result = await _secretClient.SetSecretAsync($"{certificateName}-chain", chainPem);
         return result.Value.Id;
     }
+
+    public async Task<Uri> SaveP7bAsync(string certificateName, string p7bBase64)
+    {
+        var result = await _secretClient.SetSecretAsync($"{certificateName}-p7b", p7bBase64);
+        return result.Value.Id;
+    }
+
+    public async Task<Uri> SaveDerLeafAsync(string certificateName, string derBase64)
+    {
+        var result = await _secretClient.SetSecretAsync($"{certificateName}-der", derBase64);
+        return result.Value.Id;
+    }
+
+    // New: leaf-only certificate, PEM-encoded (single BEGIN/END block, no chain, no key).
+    public async Task<Uri> SaveCrtAsync(string certificateName, string crtPem)
+    {
+        var result = await _secretClient.SetSecretAsync($"{certificateName}-crt", crtPem);
+        return result.Value.Id;
+    }
 }

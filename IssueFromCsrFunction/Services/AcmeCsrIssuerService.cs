@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
@@ -20,7 +21,7 @@ public class AcmeCsrIssuerService
             ?? throw new InvalidOperationException("AcmeEmail app setting not configured");
     }
 
-    public async Task<(string ChainPem, Uri KeyVaultSecretUri)> IssueFromCsrAsync(
+    public async Task<(string ChainPem, Uri ChainSecretUri, Uri P7bSecretUri, Uri DerSecretUri, Uri CrtSecretUri)> IssueFromCsrAsync(
         string certificateName, byte[] csrDer, IReadOnlyList<string> domains)
     {
         var server = _staging ? WellKnownServers.LetsEncryptStagingV2 : WellKnownServers.LetsEncryptV2;
@@ -97,9 +98,18 @@ public class AcmeCsrIssuerService
 
             var certChain = await order.Download();
             var chainPem = BuildChainPem(certChain);
-            var secretUri = await _accountStore.SaveCertificateChainAsync(certificateName, chainPem);
+            var chainSecretUri = await _accountStore.SaveCertificateChainAsync(certificateName, chainPem);
 
-            return (chainPem, secretUri);
+            var p7bBase64 = BuildP7bBase64(chainPem);
+            var p7bSecretUri = await _accountStore.SaveP7bAsync(certificateName, p7bBase64);
+
+            var derBase64 = BuildLeafDerBase64(certChain);
+            var derSecretUri = await _accountStore.SaveDerLeafAsync(certificateName, derBase64);
+
+            var crtPem = BuildLeafCrtPem(certChain);
+            var crtSecretUri = await _accountStore.SaveCrtAsync(certificateName, crtPem);
+
+            return (chainPem, chainSecretUri, p7bSecretUri, derSecretUri, crtSecretUri);
         }
         finally
         {
@@ -114,11 +124,39 @@ public class AcmeCsrIssuerService
     private static string BuildChainPem(CertificateChain certChain)
     {
         var sb = new System.Text.StringBuilder();
-        sb.Append(certChain.Certificate.ToPem());
+        AppendPemBlock(sb, certChain.Certificate.ToPem());
         foreach (var issuer in certChain.Issuers)
         {
-            sb.Append(issuer.ToPem());
+            AppendPemBlock(sb, issuer.ToPem());
         }
         return sb.ToString();
+    }
+
+    private static void AppendPemBlock(System.Text.StringBuilder sb, string pemBlock)
+    {
+        sb.Append(pemBlock.TrimEnd());
+        sb.Append('\n');
+    }
+
+    private static string BuildP7bBase64(string chainPem)
+    {
+        var certs = new X509Certificate2Collection();
+        certs.ImportFromPem(chainPem);
+        var p7bBytes = certs.Export(X509ContentType.Pkcs7)
+            ?? throw new InvalidOperationException("Failed to export PKCS#7 bundle.");
+        return Convert.ToBase64String(p7bBytes);
+    }
+
+    private static string BuildLeafDerBase64(CertificateChain certChain)
+    {
+        var leafPem = certChain.Certificate.ToPem();
+        using var leafCert = X509Certificate2.CreateFromPem(leafPem);
+        var derBytes = leafCert.Export(X509ContentType.Cert);
+        return Convert.ToBase64String(derBytes);
+    }
+
+    private static string BuildLeafCrtPem(CertificateChain certChain)
+    {
+        return certChain.Certificate.ToPem().TrimEnd() + "\n";
     }
 }

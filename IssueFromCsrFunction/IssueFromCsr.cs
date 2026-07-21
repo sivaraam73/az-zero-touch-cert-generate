@@ -64,9 +64,18 @@ public class IssueFromCsr
 
         try
         {
-            var (_, secretUri) = await _issuer.IssueFromCsrAsync(payload.CertificateName, csrDer, domains);
+            var (_, chainSecretUri, p7bSecretUri, derSecretUri, crtSecretUri) =
+                await _issuer.IssueFromCsrAsync(payload.CertificateName, csrDer, domains);
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(new { certificateName = payload.CertificateName, keyVaultSecretUri = secretUri.ToString(), domains });
+            await response.WriteAsJsonAsync(new
+            {
+                certificateName = payload.CertificateName,
+                keyVaultSecretUri = chainSecretUri.ToString(),
+                p7bSecretUri = p7bSecretUri.ToString(),
+                derSecretUri = derSecretUri.ToString(),
+                crtSecretUri = crtSecretUri.ToString(),
+                domains
+            });
             return response;
         }
         catch (Exception ex)
