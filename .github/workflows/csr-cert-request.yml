@@ -38,7 +38,7 @@ jobs:
           for f in ${{ steps.files.outputs.all_changed_files }}; do
             echo "Validating $f"
             cn=$(openssl req -in "$f" -noout -subject | sed -n 's/.*CN *= *\([^,/]*\).*/\1/p')
-            sans=$(openssl req -in "$f" -noout -text | grep -A1 "Subject Alternative Name" | tail -1 | tr ',' '\n' | sed 's/DNS://g; s/^ *//')
+            sans=$(openssl req -in "$f" -noout -text | grep -A1 "Subject Alternative Name" | tail -1 | tr ',' '\n' | sed 's/DNS://g; s/^ *//' || true)
             all_names="$cn"$'\n'"$sans"
             while IFS= read -r name; do
               [ -z "$name" ] && continue
